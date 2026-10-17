@@ -1,0 +1,55 @@
+
+what is database?
+
+A database is an organized collection of related data stored electronically in a way that allows data to be 
+efficiently accessed, retrieved, inserted, updated, and deleted.
+
+Example: In an e-commerce application, a database stores customer details, product information, orders, and payment records.
+
+Example using SQL:
+SELECT * FROM Customers;
+
+This query retrieves customer records from the database.
+Key points to remember for product-based company interviews:
+- Organization: Stores data in a structured or otherwise manageable form.
+- Persistence: Keeps data available beyond an individual program execution.
+- Data operations: Supports creating, reading, updating, and deleting data.
+- Data management: Helps maintain data integrity, security, and consistency.
+
+----> A database is the organized collection of data, whereas a DBMS (Database Management System) 
+is the software used to create, manage, access, and control that database. For example, PostgreSQL and MySQL are DBMSs.
+
+-----> DBMS helps us to update,delete,create data efficiently.
+-----> DBMS will ensure to have data integrity and data security.
+
+SQL : Structured Query Language
+
+------> some commands that you want to execute on database
+------>sql is a programming lanuguage that helps us to do crud on data and is provided to us by dbms.
+ 
+rdbms:relational dbms
+
+----->it will store the data in the form of table 
+----->An RDBMS is a type of Database Management System (DBMS) that stores and manages data in the form of tables consisting of rows and columns, where relationships between tables are established 
+      using keys such as primary keys and foreign keys.
+
+----->Non-Relational DBMS (NoSQL) — 
+A non-relational DBMS is a type of database management system that stores and manages data using models other than the traditional relational table 
+structure, such as document, key-value, wide-column, or graph models. It is often designed to provide flexible data models, horizontal scalability, 
+and efficient access for specific application requirements.
+
+Example
+Consider an e-commerce application storing customer information in a document database.
+
+Key points for product-based interviews
+- Flexible data models: Supports different structures depending on the database type.
+- Scalability: Many NoSQL databases support scaling across multiple servers.
+- Data models: Includes document, key-value, wide-column, and graph databases.
+- Use cases: Useful for applications involving flexible schemas, large-scale data, 
+  or specialized access patterns.
+
+popular rdbms : postgresql,mysql,oracle server,microsoft server,etc.
+
+we need to install three things:
+---> mysql server (rdbms)
+---> mysql workbench (client/UI)
