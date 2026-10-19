@@ -1,0 +1,689 @@
+MySQL Data Types
+Data Types define what kind of data you will store in a column and how different SQL operations would be performed on that column.
+
+We can broadly define the different data types in MySQL in five categories.
+
+String Data Types
+Numeric Data Types
+Date and Time Data Types
+Spatial Data types
+The JSON Data Type
+
+------String Data Types-------
+In MySQL, the String Data Types are mostly used to store data as long strings of text.
+
+The MySQL String Data Types can be divided into these 6 categories:
+
+TEXT
+BLOB
+CHAR and VARCHAR
+BINARY and VARBINARY
+ENUM
+SET
+
+The following table summarizes each string data type in MySQL and 
+will give you a basic understanding of each of them.
+
+1. TEXT
+Meaning: TEXT is used to store long strings of text, such as descriptions, reviews, comments, and articles.
+
+Example: An e-commerce website stores product descriptions.
+CREATE TABLE Products (
+    product_id INT PRIMARY KEY,
+    product_name VARCHAR(100),
+    description TEXT
+);
+Insert data:
+INSERT INTO Products
+VALUES (1, 'Laptop', 'A laptop suitable for programming and gaming.');
+
+View the data:
+SELECT description FROM Products;
+
+Result:
+description
+A laptop suitable for programming and gaming.
+
+MySQL's TEXT type can store up to 65,535 bytes. Larger variants such as MEDIUMTEXT and LONGTEXT support more data.
+
+When to use it: Product descriptions, user reviews, blog content, and long comments.
+
+Interview point: VARCHAR is commonly used for shorter, bounded strings; TEXT is useful for longer text. The best choice depends on the expected data size, indexing needs, and database design.
+
+2. BLOB
+Meaning: BLOB stands for Binary Large Object. It stores binary data rather than ordinary text.
+
+Examples include image files, PDFs, and other file contents.
+
+CREATE TABLE Documents (
+    document_id INT PRIMARY KEY,
+    file_name VARCHAR(100),
+    file_data BLOB
+);
+Here:
+- document_id identifies the document.
+- file_name stores the file name.
+- file_data stores the document's binary bytes.
+A BLOB is not normally inserted by typing a human-readable description. An application reads a file as bytes and sends those bytes to the database.
+
+For example, a Java application could read a PDF using Files.readAllBytes(path) and store the resulting byte array in file_data.
+
+When to use it: Small files or binary content that needs to be stored directly in a database.
+
+Interview point: TEXT stores character data, while BLOB stores binary data. For large files, many applications instead store files in object storage and keep the file URL or storage key in MySQL.
+
+3. CHAR and VARCHAR
+Both store character strings, but they differ in how they handle the declared length.
+
+CHAR(n) — Fixed-length string
+Stores strings in a fixed-length field of n characters, padding shorter values with spaces as needed.
+code CHAR(5)
+
+If you insert 'AB', the value is space-padded to the declared length internally. Trailing-space retrieval behavior can depend on MySQL settings and expression context.
+
+VARCHAR(n) — Variable-length string
+Stores strings up to n characters, with storage that varies according to the actual value plus length metadata.
+name VARCHAR(5)
+If you insert 'AB', it stores the two characters rather than padding the value to five characters.
+
+SQL example
+CREATE TABLE Employees (
+    employee_id INT PRIMARY KEY,
+    country_code CHAR(2),
+    employee_name VARCHAR(100)
+);
+
+INSERT INTO Employees
+VALUES (1, 'IN', 'Subhashini');
+
+Result:
+employee_id	country_code	employee_name
+1	           IN	         Subhashini
+
+When to use them:
+- CHAR: fixed-length values such as two-character country codes.
+- VARCHAR: names, email addresses, product names, and other variable-length strings.
+
+4. BINARY and VARBINARY
+These are similar to CHAR and VARCHAR, but they store binary byte strings instead of character strings.
+
+BINARY(n) — Fixed-length binary data
+Stores exactly n bytes, padding shorter values with zero bytes.
+
+Example: BINARY(4) can store four bytes.
+
+
+VARBINARY(n) — Variable-length binary data
+Stores up to n bytes without fixed-length zero padding.
+
+Example: VARBINARY(100) can store up to 100 bytes.
+
+SQL example
+CREATE TABLE BinaryDemo (
+    id INT PRIMARY KEY,
+    fixed_code BINARY(4),
+    variable_code VARBINARY(10)
+);
+
+Insert some data:
+INSERT INTO BinaryDemo
+VALUES (1, 'AB', 'AB');
+
+Conceptually, the stored bytes are:
+Column	                        Stored bytes
+fixed_code BINARY(4)	       A, B, 0x00, 0x00
+variable_code VARBINARY(10)	        A, B
+
+----->The binary column's padding behavior differs from the space-padding behavior of CHAR.
+
+----->When to use them: Fixed-format binary identifiers, byte sequences, and binary tokens where byte-level comparison is useful.
+
+5. ENUM
+Meaning: ENUM allows a column to store one value from a predefined list of allowed values.
+
+Imagine an order can have only one of these statuses:
+
+Pending
+Shipped
+Delivered
+Cancelled
+
+SQL example
+CREATE TABLE Orders (
+    order_id INT PRIMARY KEY,
+    status ENUM(
+        'Pending',
+        'Shipped',
+        'Delivered',
+        'Cancelled'
+    )
+);
+
+Insert data:
+INSERT INTO Orders
+VALUES (101, 'Pending');
+
+INSERT INTO Orders
+VALUES (102, 'Shipped');
+
+Result:
+order_id	status
+101	        Pending
+102	        Shipped
+
+What if you try this?
+INSERT INTO Orders
+VALUES (103, 'Processing');
+
+Processing is not in the allowed list. With strict SQL mode, MySQL rejects the insert. Without strict mode, an invalid value may be converted to the special empty-string error value, so strict mode is generally preferable.
+
+6. SET
+Meaning: SET allows a column to store zero or more values from a predefined list.
+
+Unlike ENUM, multiple listed values can be selected together.
+
+For example, a product can have multiple features.
+- WiFi
+- Bluetooth
+- GPS
+- NFC
+
+SQL example
+CREATE TABLE Devices (
+    device_id INT PRIMARY KEY,
+    features SET(
+        'WiFi',
+        'Bluetooth',
+        'GPS',
+        'NFC'
+    )
+);
+Insert data:
+INSERT INTO Devices
+VALUES (1, 'WiFi,Bluetooth');
+
+INSERT INTO Devices
+VALUES (2, 'GPS,NFC');
+
+INSERT INTO Devices
+VALUES (3, '');
+Result:
+device_id	features
+1	        WiFi,Bluetooth
+2	        GPS,NFC
+3	        (empty set)
+
+Numeric Data Types
+In MySQL, there are several numeric data types that can be used to store numerical values 
+with varying levels of precision and range. Here are some of the most common numeric data types in MySQL:
+
+TINYINT
+SMALLINT
+INT
+MEDIUMINT
+BIGINT
+DECIMAL
+FLOAT
+DOUBLE
+BIT
+BOOL
+BOOLEAN
+
+1. Integer data types
+Integer types store whole numbers without decimal points.
+A. TINYINT
+Stores very small whole numbers and uses 1 byte of storage.
+Type	         Minimum	 Maximum
+TINYINT signed	  -128	     127
+TINYINT UNSIGNED	0	     255
+
+Example:
+
+CREATE TABLE Users (
+    age TINYINT UNSIGNED
+);
+
+INSERT INTO Users VALUES (25);
+
+Result:
+age
+25
+
+---->Use cases: Age, small counters, or small numeric flags.
+
+---->Interview point: TINYINT UNSIGNED cannot store negative values, but it can store values from 0 to 255.
+
+B. SMALLINT
+Stores a larger range of whole numbers than TINYINT. It uses 2 bytes.
+Type	           Minimum	   Maximum
+SMALLINT signed	   -32,768	    32,767
+SMALLINT UNSIGNED	0	        65,535
+
+Example:
+CREATE TABLE Inventory (
+    quantity SMALLINT UNSIGNED
+);
+
+INSERT INTO Inventory VALUES (5000);
+
+Result:
+quantity
+5000
+
+Use cases: Inventory quantities, counts, or other values that exceed the range of TINYINT.
+
+C. INT
+Stores general-purpose whole numbers. It uses 4 bytes.
+Type	Minimum	Maximum
+INT signed	-2,147,483,648	2,147,483,647
+INT UNSIGNED	0	4,294,967,295
+Example:
+employee_id	age
+1001	    25
+
+----->Use cases: Employee IDs, product IDs, counts, and general integer values.
+------>Interview point: INT is a common choice for identifiers, but the correct type depends on the expected range. 
+       IDs do not have to be INT; smaller or larger types may be appropriate.
+
+D. MEDIUMINT
+Stores whole numbers between the ranges shown below and uses 3 bytes.
+Type	             Minimum	   Maximum
+MEDIUMINT signed	-8,388,608	  8,388,607
+MEDIUMINT UNSIGNED	    0	      16,777,215
+Example:
+CREATE TABLE PageViews (
+    views MEDIUMINT UNSIGNED
+);
+
+INSERT INTO PageViews VALUES (1000000);
+
+Result:
+views
+1000000
+
+---->Use cases: Counters or quantities that exceed SMALLINT but do not need the full range of INT.
+
+---->Interview point: MEDIUMINT is a MySQL-specific integer type, so you may encounter it less often in database designs
+     intended to be portable across different database systems.
+
+E. BIGINT
+Stores very large whole numbers and uses 8 bytes.
+Type	               Minimum	                Maximum
+BIGINT signed	-9,223,372,036,854,775,808	9,223,372,036,854,775,807
+BIGINT UNSIGNED	        0	                18,446,744,073,709,551,615
+
+Example:
+CREATE TABLE Transactions (
+    transaction_id BIGINT PRIMARY KEY,
+    amount_in_paise BIGINT
+);
+
+INSERT INTO Transactions
+VALUES (9000000001, 250000);
+
+VALUES (9000000001, 250000);
+
+
+Result:
+transaction_id	amount_in_paise
+9000000001	      250000
+---->Use cases: Very large identifiers, transaction counts, and large integer quantities.
+
+----->Interview point: Choose BIGINT when the possible values may exceed the range of INT. Larger integer types consume more storage,
+      so do not use them unnecessarily.
+
+2. Decimal and floating-point data types
+These types are used when you need to store numbers that may contain decimal points.
+
+The important difference is exact values versus approximate values.
+F. DECIMAL
+DECIMAL stores numbers with exact decimal precision. It is particularly useful for money and financial calculations.
+
+Syntax:
+DECIMAL(p, s)
+
+- p = total number of digits.
+- s = number of digits after the decimal point.
+For example, DECIMAL(7,2) allows up to 7 digits in total, with 2 digits after the decimal point.
+
+Example:
+CREATE TABLE Products (
+    product_id INT PRIMARY KEY,
+    price DECIMAL(7,2)
+);
+
+INSERT INTO Products VALUES (1, 1250.75);
+Result:
+product_id	price
+1	        1250.75
+
+---->For DECIMAL(7,2), the maximum positive value is 99999.99 and the minimum negative value is -99999.99.
+
+---->Use cases: Product prices, salaries, bank balances, tax amounts, and financial calculations.
+
+Product-company interview point: Prefer DECIMAL for money because it represents decimal values 
+exactly within its declared precision. Floating-point types can introduce rounding errors.
+
+G. FLOAT
+FLOAT stores approximate decimal numbers using typically 4 bytes in MySQL.
+
+Example:
+CREATE TABLE Measurements (
+    temperature FLOAT
+);
+
+INSERT INTO Measurements VALUES (36.5);
+
+Result:
+temperature
+36.5
+
+However, floating-point values are not always stored with exact decimal precision. For example, calculations involving values such as 0.1 and 0.2 
+may produce a result that is not exactly 0.3.
+
+---->Use cases: Scientific measurements, sensor readings, and calculations where approximate precision is acceptable.
+----->Interview point: Do not use FLOAT for financial amounts that require exact decimal arithmetic.
+
+H. DOUBLE
+DOUBLE also stores approximate decimal numbers, but typically uses 8 bytes and offers more precision than FLOAT.
+
+Example:
+CREATE TABLE ScientificData (
+    distance DOUBLE
+);
+
+INSERT INTO ScientificData VALUES (123456.789123);
+Result:
+distance
+123456.789123
+
+The displayed value is illustrative; actual display and precision depend on the value and how it is retrieved.
+
+Use cases: Scientific calculations, large measurements, and computations needing more floating-point precision.
+
+Interview point: DOUBLE generally provides more precision and a wider range than FLOAT, but neither guarantees exact decimal arithmetic.
+
+3. Bit and Boolean data types
+I. BIT
+BIT stores bit values — individual binary digits of 0 or 1.
+
+Syntax:
+BIT(M)
+
+Here, M specifies the number of bits, from 1 to 64.
+
+For example:
+CREATE TABLE FeatureFlags (
+    feature_id INT PRIMARY KEY,
+    is_enabled BIT(1)
+);
+
+INSERT INTO FeatureFlags
+VALUES (1, b'1'), (2, b'0');
+
+Result, conceptually:
+feature_id	is_enabled
+1	          1
+2	          0
+
+- b'1' represents a bit value of 1.
+- b'0' represents a bit value of 0.
+Use cases: Compact binary flags and bit fields.
+
+Interview point: BIT is useful for binary data, but it is not always the most convenient choice for ordinary application-level true/false values.
+J. BOOL
+BOOL is a synonym for TINYINT(1) in MySQL. It is commonly used to represent true/false values.
+
+Example:
+CREATE TABLE Users (
+    user_id INT PRIMARY KEY,
+    is_active BOOL
+);
+
+INSERT INTO Users VALUES (1, TRUE);
+INSERT INTO Users VALUES (2, FALSE);
+
+Result:
+user_id	is_active
+1	       1
+2	       0
+
+In MySQL, TRUE evaluates to 1, and FALSE evaluates to 0.
+
+Important: BOOL does not strictly restrict the column to only 0 and 1. 
+Other integer values can be stored unless additional constraints are applied.
+
+K. BOOLEAN
+BOOLEAN behaves exactly like BOOL in MySQL. Both are aliases for TINYINT(1).
+
+Example:
+CREATE TABLE Products (
+    product_id INT PRIMARY KEY,
+    is_available BOOLEAN
+);
+
+INSERT INTO Products VALUES (101, TRUE);
+INSERT INTO Products VALUES (102, FALSE);
+
+Result:
+product_id	is_available
+101	           1
+102	           0
+
+Use cases: Flags such as is_active, is_available, is_verified, and is_deleted.
+
+Interview point: In MySQL, BOOL and BOOLEAN are synonyms. They do not create a separate, strict Boolean storage type.
+
+-------->Date and Time Data Types
+MySQL provides different data types for managing date and time information in databases.
+
+These data types are:
+
+DATE
+TIME
+DATETIME
+TIMESTAMP
+YEAR
+
+1. DATE
+Meaning: Stores only the date — year, month, and day. It does not store the time.
+
+Format: YYYY-MM-DD
+
+Example:
+CREATE TABLE Employees (
+    employee_id INT PRIMARY KEY,
+    employee_name VARCHAR(100),
+    joining_date DATE
+);
+
+INSERT INTO Employees
+VALUES (1, 'Rahul', '2026-10-19');
+
+Result:
+employee_id	 employee_name	joining_date
+1	          Rahul	        2026-10-19
+
+When to use it:
+- Employee date of birth
+- Joining date
+- Hospital admission date when time is unnecessary
+- Product launch date
+Interview point: Use DATE when you need a calendar date but don't need the time of day.
+
+2. TIME
+Meaning: Stores a time value, including hours, minutes, and seconds. 
+MySQL also supports fractional seconds and time values that can represent elapsed durations.
+
+Format: HH:MM:SS
+
+Example:
+CREATE TABLE Appointments (
+    appointment_id INT PRIMARY KEY,
+    appointment_time TIME
+);
+
+INSERT INTO Appointments
+VALUES (101, '14:30:00');
+
+Result:
+appointment_id	appointment_time
+101	             14:30:00
+
+This represents 2:30 PM.
+
+When to use it:
+- Daily opening and closing times
+- Appointment times when the date is stored separately
+- Durations or elapsed-time values
+Interview point: TIME does not store a calendar date or a time zone.
+
+3. DATETIME
+Meaning: Stores both the date and the time in one value.
+Format: YYYY-MM-DD HH:MM:SS
+
+Example:
+CREATE TABLE HospitalAdmissions (
+    admission_id INT PRIMARY KEY,
+    patient_name VARCHAR(100),
+    admitted_at DATETIME
+);
+
+INSERT INTO HospitalAdmissions
+VALUES (1, 'Sneha', '2026-10-19 14:30:00');
+
+Result:
+admission_id	patient_name	 admitted_at
+1	               Sneha	     2026-10-19 14:30:00
+
+This means Sneha was admitted on October 19, 2026, at 2:30 PM.
+
+When to use it:
+- Appointment dates and times
+- Scheduled events
+- Business records that need a date and time without automatic time-zone conversion
+Interview point: DATETIME stores the supplied date and time as written. MySQL does not automatically 
+convert a DATETIME value between time zones.
+
+4. TIMESTAMP
+Meaning: Stores a date and time, with MySQL 
+converting values between the session time zone and UTC for storage and retrieval.
+
+Example:
+CREATE TABLE Orders (
+    order_id INT PRIMARY KEY,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO Orders (order_id)
+VALUES (101);
+
+Here, CURRENT_TIMESTAMP automatically supplies the current date and time when the order is inserted.
+
+Example result:
+order_id	created_at
+101	        2026-10-19 15:30:00
+
+When to use it:
+- Order creation times
+- Record creation or modification times
+- Event logs
+- Tracking when a database record was created
+
+Important: DATETIME vs TIMESTAMP
+Suppose an application inserts 2026-10-19 10:00:00 while its MySQL session time zone is UTC.
+
+If another session uses a different time zone:
+- DATETIME continues to display 2026-10-19 10:00:00.
+- TIMESTAMP is converted for display in the other session's time zone, representing the same instant.
+
+5. YEAR
+Meaning: Stores a year value without a month or day.
+
+Example:
+CREATE TABLE Movies (
+    movie_id INT PRIMARY KEY,
+    title VARCHAR(100),
+    release_year YEAR
+);
+
+INSERT INTO Movies
+VALUES (1, 'Example Movie', 2025);
+
+Result:
+movie_id	title	      release_year
+1	     Example Movie	     2025
+
+When to use it:
+- Movie release years
+- Model years for vehicles
+- Academic or financial reporting years where only the year is needed
+Important MySQL detail: The normal supported YEAR range is 1901 through 2155, plus 0000. Prefer four-digit year values. Two-digit year inputs have special conversion rules and should be avoided.
+
+Interview point: Use YEAR when only the year matters; use DATE when you need the complete calendar date.
+
+
+------->JSON data type — important for modern applications
+JSON stores structured data containing key-value pairs, arrays, numbers, strings, and Boolean values.
+
+Example: An e-commerce product can have different attributes depending on its category.
+
+CREATE TABLE Products (
+    product_id INT PRIMARY KEY,
+    product_name VARCHAR(100),
+    attributes JSON
+);
+
+Insert data:
+INSERT INTO Products
+VALUES (
+    1,
+    'Laptop',
+    '{"brand":"Dell","ram":16,"storage":512}'
+);
+
+Retrieve a specific value:
+SELECT
+    product_name,
+    attributes->>'$.brand' AS brand
+FROM Products;
+
+Result:
+product_name	brand
+Laptop	         Dell
+
+Interview points:
+- MySQL validates data stored in a JSON column.
+- JSON is useful for flexible or nested attributes.
+- Don't automatically store everything in JSON. 
+  Frequently queried fields and relationships often belong in regular 
+  columns and relational tables.
+
+3. Spatial data types — know the basics
+These types store geometric or geographic information.
+
+Type	               Meaning	                 Example use
+POINT	              A single point	        Store a location
+LINESTRING	          A connected line	        Store a route
+POLYGON	              A closed area	            Store a service zone
+GEOMETRY	       A general geometric object	Store different geometry types
+
+Example:
+CREATE TABLE Locations (
+    location_id INT PRIMARY KEY,
+    position POINT NOT NULL
+);
+A POINT can represent a location using coordinates. MySQL also provides spatial functions for calculating distances 
+and checking whether locations fall within geographic areas.
+
+Don't confuse data types with column attributes
+These are not additional data types, but they are very important for interview questions.
+
+Attribute	                  Meaning	                             Example
+
+UNSIGNED	   Disallows negative values for supported numeric types	   INT UNSIGNED
+AUTO_INCREMENT	Automatically generates successive numeric values	       id INT AUTO_INCREMENT
+NOT NULL	          Disallows missing values	                           name VARCHAR(100) NOT NULL
+DEFAULT	         Supplies a value when one isn't explicitly provided	   status VARCHAR(20) DEFAULT 'Pending'
+PRIMARY KEY	        Uniquely identifies rows and disallows NULL	            id INT PRIMARY KEY
+UNIQUE	                  Enforces uniqueness	                            email VARCHAR(100) UNIQUE
