@@ -1,0 +1,253 @@
+1. Types of SQL constraints
+The main constraints you should know are:
+
+Constraint	      Purpose
+NOT NULL	    Prevents a column from storing NULL.
+UNIQUE	        Prevents duplicate values.
+PRIMARY KEY	    Uniquely identifies each row.
+FOREIGN KEY	    Enforces relationships between tables.
+CHECK	        Ensures values satisfy a condition.
+DEFAULT	        Supplies a value when one isn't provided.
+
+----->DEFAULT is commonly taught alongside constraints, although technically it supplies a default value rather than restricting which values are allowed.
+
+2. NOT NULL constraint
+Meaning: A column with NOT NULL must have a value; it cannot contain SQL NULL.
+
+Real-world example: Every employee must have a name.
+
+CREATE TABLE Employees (
+    employee_id INT PRIMARY KEY,
+    employee_name VARCHAR(100) NOT NULL
+);
+
+Valid insertion:
+INSERT INTO Employees
+VALUES (1, 'Rahul');
+
+Result:
+employee_id	  employee_name
+1	           Rahul
+
+Invalid insertion:
+INSERT INTO Employees
+VALUES (2, NULL);
+
+Result: MySQL rejects the insertion because employee_name cannot be NULL.
+
+Important distinction:
+- NULL means the value is missing or unknown.
+- '' is an empty string.
+- ' ' is a string containing a space.
+A NOT NULL constraint does not prevent empty strings. If a name must contain non-whitespace characters, additional validation is needed.
+
+Interview question: Does NOT NULL prevent duplicate values?
+
+No. It only prevents NULL; duplicate names are still allowed.
+
+3. UNIQUE constraint
+Meaning: Ensures that values in a column or combination of columns are unique.
+
+Real-world example: Two employee accounts must not share the same email address.
+
+CREATE TABLE Employees (
+    employee_id INT PRIMARY KEY,
+    employee_name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) UNIQUE
+);
+
+Valid data:
+INSERT INTO Employees
+VALUES (1, 'Rahul', 'rahul@example.com');
+
+INSERT INTO Employees
+VALUES (2, 'Sneha', 'sneha@example.com');
+
+Invalid data:
+INSERT INTO Employees
+VALUES (3, 'Arun', 'rahul@example.com');
+
+Result: The insertion fails because that email already exists.
+Can a UNIQUE column contain NULL?
+In MySQL, yes. A nullable column with a UNIQUE constraint can contain multiple NULL values, because NULL is not treated as an ordinary equal value for uniqueness.
+
+You can also create a composite unique constraint:
+
+UNIQUE (first_name, last_name)
+
+This prevents duplicate combinations of first and last names, but does not require each name to be individually unique.
+
+Interview point: A table can have multiple UNIQUE constraints, but only one PRIMARY KEY constraint.
+
+4. PRIMARY KEY constraint
+Meaning: A primary key uniquely identifies every row in a table.
+
+A primary key combines two rules:
+- Values must be unique.
+- Values cannot be NULL.
+
+Example:
+CREATE TABLE Students (
+    student_id INT PRIMARY KEY,
+    student_name VARCHAR(100) NOT NULL
+);
+
+Valid data:
+student_id	student_name
+1	         Rahul
+2	         Sneha
+3	         Arun
+
+Invalid insertion — duplicate ID:
+INSERT INTO Students
+VALUES (1, 'Priya');
+
+Result: Error because student ID 1 already exists.
+
+Invalid insertion — NULL ID:
+INSERT INTO Students
+VALUES (NULL, 'Priya');
+
+Result: Error because a primary key cannot contain NULL.
+Can a primary key contain multiple columns?
+Yes. This is called a composite primary key.
+
+CREATE TABLE Enrollments (
+    student_id INT,
+    course_id INT,
+    enrollment_date DATE,
+    PRIMARY KEY (student_id, course_id)
+);
+
+Here, the combination of student_id and course_id must be unique.
+student_id	course_id	Allowed?
+1	           101	     Yes
+1	           102	     Yes
+2	           101	     Yes
+1	           101	      No — duplicate combination
+
+A student can enroll in multiple courses, but the same student cannot have two rows for the same course in this table.
+
+Interview point: A table can have only one primary key constraint, but that key can contain multiple columns.
+
+5. FOREIGN KEY constraint
+Meaning: A foreign key connects tables and ensures that a referenced value exists in the parent table, subject to the rules of the relationship.
+
+Let's use your Authors and Books example.
+Authors — Parent table
+AuthorID (PK)	AuthorName
+1	             John
+2	              Mary
+
+Books — Child table
+BookID (PK)	Title	        AuthorID (FK)
+101	        SQL Basics	          1
+102	        Java Guide	          1
+103	        Python Basics	      2
+
+Create the tables:
+CREATE TABLE Authors (
+    AuthorID INT PRIMARY KEY,
+    AuthorName VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Books (
+    BookID INT PRIMARY KEY,
+    Title VARCHAR(100) NOT NULL,
+    AuthorID INT,
+    FOREIGN KEY (AuthorID)
+        REFERENCES Authors(AuthorID)
+);
+
+Valid insertion:
+INSERT INTO Books
+VALUES (104, 'HTML Basics', 1);
+
+This succeeds because author 1 exists.
+
+Invalid insertion:
+INSERT INTO Books
+VALUES (105, 'CSS Basics', 99);
+
+Result: MySQL rejects the insertion because author 99 does not exist.
+Foreign key deletion behavior
+You can also specify what happens when a referenced parent row is deleted.
+
+Action	                    Behavior
+ON DELETE CASCADE	     Deletes matching child rows.
+ON DELETE SET NULL	     Sets the child foreign key to NULL.
+ON DELETE RESTRICT	     Prevents deleting a referenced parent row.
+ON DELETE SET DEFAULT	 Attempts to use the default value; not supported as an effective foreign key action by MySQL InnoDB.
+
+Example:
+FOREIGN KEY (AuthorID)
+    REFERENCES Authors(AuthorID)
+    ON DELETE CASCADE
+
+If John is deleted, his books are deleted automatically.
+
+Interview point: The foreign key normally references a primary key or a suitable unique key in the parent table. 
+The foreign key column itself does not have to be unique, so multiple books can reference the same author.
+
+6. CHECK constraint
+Meaning: Ensures that a value satisfies a specified condition.
+
+Real-world example: An employee's salary must not be negative.
+
+CREATE TABLE Employees (
+    employee_id INT PRIMARY KEY,
+    employee_name VARCHAR(100),
+    salary DECIMAL(10,2) CHECK (salary >= 0)
+);
+
+Valid insertion:
+INSERT INTO Employees
+VALUES (1, 'Rahul', 35000.00);
+
+Invalid insertion:
+INSERT INTO Employees
+VALUES (2, 'Sneha', -5000.00);
+
+Result: MySQL rejects the insertion because the salary violates the check condition.
+
+Other examples:
+example 1 --- age INT CHECK (age >= 18)
+
+example 2 --- discount DECIMAL(5,2)
+    CHECK (discount BETWEEN 0 AND 100)
+
+7. DEFAULT constraint
+Meaning: Supplies a predefined value when an INSERT statement does not provide a value for that column.
+
+Real-world example: Every new order should have the status Pending unless another status is provided.
+
+CREATE TABLE Orders (
+    order_id INT PRIMARY KEY,
+    customer_name VARCHAR(100) NOT NULL,
+    status VARCHAR(20) DEFAULT 'Pending'
+);
+
+Insert without specifying status:
+
+INSERT INTO Orders (order_id, customer_name)
+VALUES (101, 'Rahul');
+
+Result:
+order_id	customer_name	 status
+101	           Rahul	     Pending
+
+The database automatically supplies Pending.
+What if you explicitly insert NULL?
+
+INSERT INTO Orders
+VALUES (102, 'Sneha', NULL);
+
+Because status is nullable, MySQL stores NULL instead of applying the default.
+
+Remember:
+- Column omitted from INSERT → default is applied.
+- Explicit NULL → NULL is stored if permitted.
+- Explicit value → that value is used.
+If a column is NOT NULL, explicitly inserting NULL is rejected in strict SQL mode 
+rather than silently applying the default.
+
