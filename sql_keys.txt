@@ -1,0 +1,356 @@
+1. What are keys in SQL?
+A key is a column or a combination of columns used to identify records uniquely, establish relationships between tables, or enforce data integrity.
+
+Consider this Student table:
+student_id	name	email
+101	Anu	anu@gmail.com
+102	Ravi	ravi@gmail.com
+103	Priya	priya@gmail.com
+Here:
+- student_id can uniquely identify every student.
+- email can also uniquely identify each student if every email must be different.
+- name is not a reliable unique identifier because two students can have the same name.
+Keys help databases prevent duplicate identities and maintain correct relationships between tables.
+
+2. All important SQL keys at a glance
+1 Super Key
+Any column combination that uniquely identifies a row.
+2 Candidate Key
+A minimal super key; no unnecessary column.
+3 Primary Key
+The chosen candidate key used as the main row identifier.
+4 Alternate Key
+A candidate key that was not chosen as the primary key.
+5 Foreign Key
+A column or column set that references a key in another or the same table.
+6 Composite Key
+A key made from two or more columns.
+7 Unique Key / UNIQUE Constraint
+Prevents duplicate values or combinations.
+8 Natural Key
+A key based on meaningful real-world data.
+9 Surrogate Key
+An artificially generated identifier.
+
+3. Super Key
+A super key is any column or combination of columns that uniquely identifies each row in a table.
+
+Suppose we have:
+student_id	email	         name
+101	    anu@gmail.com	     Anu
+102	    ravi@gmail.com	   Ravi
+103	    priya@gmail.com	   Priya
+Assume both student_id and email are unique.
+
+The following are super keys:
+- {student_id}
+- {email}
+- {student_id, name}
+- {email, name}
+- {student_id, email}
+- {student_id, email, name}
+Why are combinations such as {student_id, name} also super keys? Because student_id alone already uniquely identifies the row. Adding more columns does not remove that uniqueness.
+
+Key interview point: A super key may contain unnecessary columns.
+
+4. Candidate Key
+A candidate key is a minimal super key. It uniquely identifies a row, and no column can be removed without losing that property.
+
+In our example, the candidate keys are:
+- student_id
+- email
+But {student_id, name} is not a candidate key because name is unnecessary. student_id alone is sufficient.
+
+Super key vs candidate key
+Super key	Candidate key
+Uniquely identifies a row	Uniquely identifies a row
+Can contain extra columns	Contains no unnecessary columns
+There can be many	There can be many
+Example: (student_id, name)	Example: (student_id)
+Interview trick: Every candidate key is a super key, but not every super key is a candidate key.
+
+5. Primary Key (PK)
+A primary key is the candidate key selected to uniquely identify each row in a table.
+Rules of a primary key
+- Values must be unique.
+- Values cannot be NULL.
+- A table can have only one primary key constraint.
+- That primary key can consist of one column or multiple columns.
+- The database enforces the constraint, even when data is inserted by different applications.
+
+example -
+CREATE TABLE Student (
+    student_id INT PRIMARY KEY,
+    name VARCHAR(50),
+    email VARCHAR(100)
+);
+
+Insert records:
+INSERT INTO Student VALUES
+(101, 'Anu', 'anu@gmail.com'),
+(102, 'Ravi', 'ravi@gmail.com');
+Both rows are valid.
+
+This insert fails because the primary key is duplicated:
+
+INSERT INTO Student
+VALUES (101, 'Priya', 'priya@gmail.com');
+
+This insert also fails because the primary key cannot be NULL:
+INSERT INTO Student
+VALUES (NULL, 'Priya', 'priya@gmail.com');
+
+Real-world use case
+In an e-commerce application, every order needs a unique identity. Even if two customers order the same product for the same price, their orders must remain distinguishable.
+
+CREATE TABLE Orders (
+    order_id INT PRIMARY KEY,
+    customer_name VARCHAR(100),
+    total_amount DECIMAL(10, 2)
+);
+
+Here, order_id uniquely identifies an order.
+Can a table have two primary keys?
+A table cannot have two separate primary key constraints, such as one on student_id and another on email.
+
+However, a primary key can contain multiple columns. That is called a composite primary key, which we will cover below.
+
+6. Alternate Key
+An alternate key is a candidate key that was not selected as the primary key.
+
+Consider a Student table:
+student_id	email	passport_number
+101	anu@gmail.com	P1001
+102	ravi@gmail.com	P1002
+Assume all three columns are unique and non-null.
+
+Candidate keys:
+- student_id
+- email
+- passport_number
+If we choose student_id as the primary key, email and passport_number are alternate keys.
+
+SQL example
+CREATE TABLE Student (
+    student_id INT PRIMARY KEY,
+    email VARCHAR(100) UNIQUE,
+    passport_number VARCHAR(20) UNIQUE
+);
+Here, the primary key is student_id. The other two columns are enforced as unique candidate identifiers and can serve as alternate keys.
+
+Interview point: Alternate key is a relational-design concept. SQL does not have a separate ALTERNATE KEY constraint keyword. The unchosen candidate keys are generally enforced using UNIQUE and, when needed, NOT NULL.
+
+7. Foreign Key (FK)
+A foreign key is a column or group of columns that references a primary key or another eligible unique key in a referenced table.
+
+It maintains referential integrity between related tables.
+Real-world example: Departments and Employees
+
+Department
+department_id (PK)
+
+department_name
+
+10 · Engineering
+
+20 · HR
+
+Employees.department_id references Department.department_id
+Employee
+employee_id (PK)
+
+employee_name
+
+department_id (FK)
+
+1 · Anu · 10
+
+2 · Ravi · 20
+
+3 · Priya · 10
+
+SQL example
+
+CREATE TABLE Department (
+    department_id INT PRIMARY KEY,
+    department_name VARCHAR(50)
+);
+
+CREATE TABLE Employee (
+    employee_id INT PRIMARY KEY,
+    employee_name VARCHAR(50),
+    department_id INT,
+    FOREIGN KEY (department_id)
+        REFERENCES Department(department_id)
+);
+
+What does the foreign key do?
+This is valid because department 10 exists:
+INSERT INTO Employee
+VALUES (1, 'Anu', 10);
+
+This normally fails because department 99 does not exist:
+INSERT INTO Employee
+VALUES (2, 'Ravi', 99);
+
+The foreign key prevents an employee from referencing a nonexistent department.
+Important foreign key rules
+1. A foreign key can contain duplicate values. Many employees can belong to the same department.
+2. A foreign key can generally contain NULL unless it is also declared NOT NULL or restricted by other rules.
+3. A foreign key does not automatically have to be unique.
+4. The referenced columns must be a valid referenced key under the database's rules.
+5. Deleting a referenced parent row may be restricted or handled through actions such as ON DELETE CASCADE or ON DELETE SET NULL.
+Example:
+FOREIGN KEY (department_id)
+    REFERENCES Department(department_id)
+    ON DELETE SET NULL
+
+For this action to work, the child column must permit NULL. The database sets the referencing value to NULL when the referenced department is deleted.
+Can a foreign key reference the same table?
+Yes. This is called a self-referencing foreign key.
+
+CREATE TABLE Employee (
+    employee_id INT PRIMARY KEY,
+    employee_name VARCHAR(50),
+    manager_id INT,
+    FOREIGN KEY (manager_id)
+        REFERENCES Employee(employee_id)
+);
+
+Here, manager_id refers to another employee's employee_id. The manager may be in the same table.
+
+This is useful for employee-manager hierarchies, category trees, and comment-reply relationships.
+
+8. Composite Key
+A composite key is a key made from two or more columns.
+
+Use it when one column alone cannot uniquely identify a record, but the combination can.
+Real-world example: Student course enrollment
+student_id	course_id	enrollment_date
+101	501	2026-01-10
+101	502	2026-01-11
+102	501	2026-01-12
+A student can enroll in multiple courses, and a course can have multiple students. Neither student_id nor course_id alone uniquely identifies an enrollment.
+
+But the pair (student_id, course_id) can.
+SQL example
+CREATE TABLE Enrollment (
+    student_id INT,
+    course_id INT,
+    enrollment_date DATE,
+    PRIMARY KEY (student_id, course_id)
+);
+
+This is valid:
+INSERT INTO Enrollment VALUES
+(101, 501, '2026-01-10');
+
+INSERT INTO Enrollment VALUES
+(101, 502, '2026-01-11');
+
+But this fails because the combination already exists:
+INSERT INTO Enrollment VALUES
+(101, 501, '2026-02-01');
+
+Even though the date differs, the primary key is only (student_id, course_id).
+Composite key vs composite primary key
+- Composite key describes a key containing multiple columns.
+- Composite primary key means that multi-column key was selected as the table's primary key.
+A composite key could also be used as a unique key or a foreign key.
+
+9. Unique Key / UNIQUE Constraint
+A UNIQUE constraint prevents duplicate values in a column or duplicate combinations across multiple columns.
+Example
+
+CREATE TABLE Users (
+    user_id INT PRIMARY KEY,
+    email VARCHAR(100) UNIQUE,
+    username VARCHAR(50) UNIQUE
+);
+
+Valid records:
+user_id    	email       	   username
+1	         anu@gmail.com	   anu101
+2	         ravi@gmail.com	   ravi102
+This fails because the email is already used:
+
+INSERT INTO Users
+VALUES (3, 'anu@gmail.com', 'anu103');
+
+Primary key vs unique key
+Feature	Primary key	UNIQUE constraint
+Uniqueness	Required	Required
+NULL values	Not allowed	Depends on the database; MySQL permits multiple NULLs in a nullable unique column
+Number per table	One primary key constraint	Multiple unique constraints allowed
+Main purpose	Main row identifier	Enforce additional uniqueness rules
+Example: A user has a unique user_id and a unique email address. Usually, user_id is the primary key, and email has a unique constraint.
+
+Interview trap: UNIQUE does not mean NOT NULL. If every user must provide an email, declare the column as NOT NULL UNIQUE.
+Composite unique constraint
+
+CREATE TABLE ProductReview (
+    review_id INT PRIMARY KEY,
+    user_id INT,
+    product_id INT,
+    rating INT,
+    UNIQUE (user_id, product_id)
+);
+
+This ensures that each user can have at most one review per product, assuming the relevant columns are non-null. In MySQL, nullable columns in a unique constraint can allow combinations 
+involving NULL to repeat, so use NOT NULL if that is not desired.
+
+10. Natural Key
+A natural key is a key based on real-world data that already has meaning.
+
+Examples:
+- A passport number
+- A national identification number
+- An ISBN for a book edition
+- A company registration number
+A natural key is not automatically suitable just because its value is meaningful. It must also satisfy the required uniqueness and nullability rules.
+SQL example
+
+CREATE TABLE Book (
+    isbn VARCHAR(20) PRIMARY KEY,
+    title VARCHAR(200),
+    author VARCHAR(100)
+);
+
+Here, isbn is a natural primary key, assuming the application stores a unique identifier for each relevant book edition.
+Advantages
+- The value has real-world meaning.
+- It may already exist in the source system.
+- It can help identify a record without an additional identifier.
+Disadvantages
+- Business identifiers can change.
+- Some identifiers are long or awkward to use.
+- Privacy or regulatory concerns may make certain identifiers inappropriate as primary keys.
+Product-company interview insight: A natural key is a design choice, not a separate SQL constraint. It can be implemented using a primary key or a unique constraint.
+
+11. Surrogate Key
+A surrogate key is an artificially generated identifier that has no inherent business meaning.
+
+Examples: 101, 102, 103 as database-generated user IDs.
+SQL example in MySQL
+
+CREATE TABLE Customers (
+    customer_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(150) UNIQUE
+);
+
+Insert a customer without specifying the ID:
+
+INSERT INTO Customers (name, email)
+VALUES ('Anu', 'anu@gmail.com');
+
+MySQL generates the customer_id automatically.
+Natural key vs surrogate key
+Natural key	Surrogate key
+Based on meaningful real-world data	Artificially generated
+Example: ISBN	Example: book_id = 101
+May change when business data changes	Usually remains stable
+Can be long or composite	Often a compact integer or UUID
+Can expose sensitive information if poorly chosen	Can avoid using sensitive business identifiers directly
+
+
