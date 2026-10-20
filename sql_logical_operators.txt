@@ -1,0 +1,496 @@
+---- Logical Operators ---
+SQL logical operators are used to combine multiple conditions, reverse a condition, and filter records in queries.
+They are especially important for SDE-1 interviews because interviewers combine logical operators with WHERE, HAVING, JOIN, subqueries, and aggregate functions.
+Let's learn each operator from the basics, using practical tables, SQL queries, expected outputs, and common interview traps.
+
+1. Sample table for all examples
+We will use this Employees table throughout the notes.
+emp_id	name	department	salary	age	 city
+1	      Asha	   IT	      80000	  25	 Bangalore
+2	      Ravi	   HR	      50000	  30	Hyderabad
+3      	Priya   	IT	    90000	  28	Bangalore
+4	      Kiran	   Sales	  60000  	24	Chennai
+5      	Meena	    HR	    70000	  35	Bangalore
+6	      Arjun	    IT	    60000	  32	Hyderabad
+7	       Neha  	Sales	    85000	  27	Chennai
+
+These are the main SQL logical operators you should know:
+AND
+Both conditions must be TRUE.
+Example: IT employees AND salary above 70,000.
+OR
+At least one condition must be TRUE.
+Example: Employees in IT OR HR.
+NOT
+Reverses a condition's truth value.
+Example: Employees NOT in IT.
+
+Other important SQL constructs include IN, BETWEEN, LIKE, IS NULL, EXISTS, and ANY/ALL. Some of these are predicates rather than logical operators themselves, 
+but they are often used with logical operators in interview questions.
+
+2. AND operator
+Definition: AND returns TRUE only when both conditions are TRUE.
+
+Syntax:
+SELECT column_names
+FROM table_name
+WHERE condition1 AND condition2;
+Example 1: IT employees whose salary is above 70,000
+SELECT *
+FROM Employees
+WHERE department = 'IT'
+  AND salary > 70000;
+Expected result:
+emp_id	name	department	salary
+1	       Asha	  IT	      80000
+3	       Priya	IT	      90000
+
+Why?
+- Asha: IT is TRUE, salary above 70,000 is TRUE.
+- Priya: Both conditions are TRUE.
+- Arjun: IT is TRUE, but salary above 70,000 is FALSE, so he is excluded.
+Important: A row must satisfy both conditions to be returned.
+Example 2: Employees aged above 25 AND living in Bangalore
+
+SELECT name, age, city
+FROM Employees
+WHERE age > 25
+  AND city = 'Bangalore';
+
+Expected result:
+name	age	city
+Priya	28	Bangalore
+Meena	35	Bangalore
+Asha is excluded because her age is exactly 25, not greater than 25.
+
+Truth table for AND
+Condition A	Condition B	A AND B
+TRUE	         TRUE	     TRUE
+TRUE	         FALSE	   FALSE
+FALSE	         TRUE	     FALSE
+FALSE	         FALSE	   FALSE
+Interview tip: AND makes filtering more restrictive when you add another condition.
+
+3. OR operator
+Definition: OR returns TRUE if at least one condition is TRUE. Both conditions can also be TRUE.
+
+Syntax:
+SELECT column_names
+FROM table_name
+WHERE condition1 OR condition2;
+
+Example 1: Employees working in IT OR HR
+SELECT name, department
+FROM Employees
+WHERE department = 'IT'
+   OR department = 'HR';
+
+Expected result:
+name	department
+Asha	IT
+Ravi	HR
+Priya	IT
+Meena	HR
+Arjun	IT
+Sales employees are excluded because neither condition is TRUE for them.
+
+Example 2: Employees whose salary is below 60,000 OR age is above 30
+
+SELECT name, salary, age
+FROM Employees
+WHERE salary < 60000
+   OR age > 30;
+Expected result:
+name	salary	age
+Ravi	50000	30
+Meena	70000	35
+Arjun	60000	32
+Ravi qualifies because his salary is below 60,000. Meena and Arjun qualify because their ages are above 30.
+
+Truth table for OR
+Condition A	Condition B	A OR B
+TRUE	TRUE	TRUE
+TRUE	FALSE	TRUE
+FALSE	TRUE	TRUE
+FALSE	FALSE	FALSE
+Interview tip: OR generally allows more rows to qualify than either condition alone.
+
+4. NOT operator
+Definition: NOT reverses the truth value of a condition.
+- NOT TRUE becomes FALSE.
+- NOT FALSE becomes TRUE.
+- NOT UNKNOWN remains UNKNOWN.
+Example 1: Employees who do not work in IT
+
+SELECT name, department
+FROM Employees
+WHERE NOT (department = 'IT');
+
+Expected result:
+name	department
+Ravi	HR
+Kiran	Sales
+Meena	HR
+Neha	Sales
+Example 2: Using NOT with a comparison
+
+SELECT name, salary
+FROM Employees
+WHERE NOT (salary > 70000);
+
+Expected result:
+name	salary
+Ravi	50000
+Kiran	60000
+Meena	70000
+Arjun	60000
+Why is Meena included? Because 70000 > 70000 is FALSE, and NOT FALSE is TRUE.
+Example 3: NOT with IN
+
+SELECT name, department
+FROM Employees
+WHERE department NOT IN ('IT', 'HR');
+
+Expected result: Kiran and Neha, both from Sales.
+
+This excludes employees whose department is IT or HR.
+
+Important: NOT IN can behave unexpectedly when its list or subquery contains NULL. We will cover that interview trap below.
+Truth table for NOT
+Condition A	NOT A
+TRUE	FALSE
+FALSE	TRUE
+UNKNOWN	UNKNOWN
+
+5. Combining AND, OR and NOT
+This is where product-company SQL questions become more interesting.
+Example 1: IT employees earning above 70,000 OR HR employees
+
+SELECT name, department, salary
+FROM Employees
+WHERE (department = 'IT' AND salary > 70000)
+   OR department = 'HR';
+
+Expected result:
+name	department	salary
+Asha	IT	80000
+Ravi	HR	50000
+Priya	IT	90000
+Meena	HR	70000
+Notice the parentheses: they group the two conditions that must both be true for IT employees.
+
+Example 2: Why parentheses matter
+Compare these two queries.
+
+Query A
+SELECT name
+FROM Employees
+WHERE department = 'IT'
+   OR department = 'HR'
+  AND salary > 70000;
+
+Query B
+SELECT name
+FROM Employees
+WHERE (department = 'IT'
+    OR department = 'HR')
+  AND salary > 70000;
+
+SQL evaluates AND before OR unless parentheses specify otherwise.
+
+Therefore:
+- Query A means IT OR (HR AND salary > 70000). It returns Asha, Priya, Arjun and Meena.
+- Query B means (IT OR HR) AND salary > 70000. It returns Asha, Priya and Meena.
+The difference is Arjun: he is in IT but earns only 60,000. Query A includes him; Query B does not.
+
+Interview rule: When mixing AND and OR, use parentheses to make your intention clear.
+Operator precedence to remember
+From higher to lower precedence, the relevant order is generally:
+1. Parentheses (...)
+2. NOT
+3. AND
+4. OR
+Other operators and predicates have their own precedence rules, so parentheses are the safest way to avoid ambiguity.
+
+6. SQL's three-valued logic: TRUE, FALSE and UNKNOWN
+This is one of the most important concepts for interviews.
+
+In ordinary comparisons, SQL can produce three results:
+- TRUE
+- FALSE
+- UNKNOWN
+UNKNOWN usually arises when a comparison involves NULL.
+
+Suppose an employee has no recorded salary:
+SELECT *
+FROM Employees
+WHERE salary > NULL;
+
+This comparison does not return TRUE or FALSE; it returns UNKNOWN. The query returns no rows.
+
+To find missing values, use IS NULL:
+SELECT *
+FROM Employees
+WHERE salary IS NULL;
+
+To find salaries that are present:
+SELECT *
+FROM Employees
+WHERE salary IS NOT NULL;
+
+Three-valued logic truth tables
+A	      B	    A AND B	 A OR B
+TRUE	UNKNOWN	UNKNOWN	 TRUE
+FALSE	UNKNOWN	FALSE	UNKNOWN
+UNKNOWN	UNKNOWN	UNKNOWN	UNKNOWN
+Remember that WHERE retains only rows for which the condition evaluates to TRUE. FALSE and UNKNOWN are both filtered out.
+
+Common NULL trap
+SELECT *
+FROM Employees
+WHERE city <> 'Bangalore';
+
+If an employee's city is NULL, that employee is not returned. The comparison NULL <> 'Bangalore' is UNKNOWN.
+
+If your requirement is to include employees whose city is not Bangalore or is missing, write:
+SELECT *
+FROM Employees
+WHERE city <> 'Bangalore'
+   OR city IS NULL;
+
+The NOT IN trap
+Suppose a subquery returns ('IT', NULL).
+
+SELECT name
+FROM Employees
+WHERE department NOT IN (
+    SELECT department
+    FROM SomeTable
+);
+If that subquery contains a NULL, comparisons against the list can become UNKNOWN, and expected rows may be filtered out.
+
+A safer approach when checking that no matching row exists is often NOT EXISTS:
+
+SELECT e.name
+FROM Employees e
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM SomeTable s
+    WHERE s.department = e.department
+);
+This avoids the NOT IN-with-NULL trap. Note that if e.department itself is NULL, the equality comparison matches no row, 
+so NOT EXISTS will be TRUE for that employee unless you explicitly exclude NULL departments.
+
+7. Other SQL conditions used with logical operators
+Strictly speaking, AND, OR and NOT are the core logical operators. However, product-company interviews frequently combine them with the following predicates.
+A. IN and NOT IN
+IN checks whether a value matches any value in a list. NOT IN checks whether it matches none of the listed values.
+
+SELECT name
+FROM Employees
+WHERE department IN ('IT', 'HR');
+
+Returns Asha, Ravi, Priya, Meena and Arjun.
+
+Equivalent to:
+WHERE department = 'IT'
+   OR department = 'HR';
+
+Using NOT IN:
+SELECT name
+FROM Employees
+WHERE department NOT IN ('IT', 'HR');
+
+Returns Kiran and Neha.
+
+Interview use case: Filtering against multiple permitted categories.
+B. BETWEEN and NOT BETWEEN
+BETWEEN checks whether a value falls within an inclusive range.
+
+SELECT name, salary
+FROM Employees
+WHERE salary BETWEEN 60000 AND 80000;
+
+Expected result:
+name	salary
+Asha	80000
+Kiran	60000
+Meena	70000
+Arjun	60000
+Both boundaries are included.
+
+This is equivalent to:
+WHERE salary >= 60000
+  AND salary <= 80000;
+
+To exclude that range:
+SELECT name, salary
+FROM Employees
+WHERE salary NOT BETWEEN 60000 AND 80000;
+
+Returns Ravi, Priya and Neha.
+C. LIKE and NOT LIKE
+LIKE matches a text pattern. It is useful when you don't know the complete string.
+
+The two most important wildcards are:
+- % — zero or more characters.
+- _ — exactly one character.
+Example: Names starting with A.
+
+SELECT name
+FROM Employees
+WHERE name LIKE 'A%';
+
+Result: Ravi, Priya, Kiran, Meena and Neha.
+
+You can combine LIKE with logical operators:
+
+SELECT name
+FROM Employees
+WHERE name LIKE 'A%'
+   OR name LIKE 'P%';
+
+Result: Asha, Arjun and Priya.
+
+Case sensitivity depends on your database and collation settings.
+D. IS NULL and IS NOT NULL
+NULL represents missing or unknown data. It is not the same as zero or an empty string.
+
+Suppose we have a bonus column that can contain NULL.
+
+SELECT name
+FROM Employees
+WHERE bonus IS NULL;
+
+Returns employees whose bonus is missing.
+
+To find employees with a recorded bonus:
+
+SELECT name
+FROM Employees
+WHERE bonus IS NOT NULL;
+
+To find employees in IT whose bonus is missing:
+
+SELECT name
+FROM Employees
+WHERE department = 'IT'
+  AND bonus IS NULL;
+
+Never write bonus = NULL or bonus <> NULL to test for missing values.
+E. EXISTS and NOT EXISTS
+EXISTS checks whether a subquery returns at least one row. NOT EXISTS checks whether it returns no rows.
+
+Suppose you have these tables:
+
+Departments
+department_id	department_name
+1	             IT
+2	             HR
+3	             Sales
+
+Projects
+project_id	department_id
+101	              1
+102	              1
+103              	3
+
+Find departments that have at least one project:
+SELECT d.department_name
+FROM Departments d
+WHERE EXISTS (
+    SELECT 1
+    FROM Projects p
+    WHERE p.department_id = d.department_id
+);
+
+Result: IT and Sales.
+
+Find departments with no projects:
+
+SELECT d.department_name
+FROM Departments d
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM Projects p
+    WHERE p.department_id = d.department_id
+);
+
+Result: HR.
+
+Interview tip: Understand correlated subqueries and NOT EXISTS. They frequently appear in questions about missing relationships, unmatched records and anti-joins.
+F. ANY and ALL
+These compare a value with the results of a subquery.
+- > ANY means greater than at least one value.
+- > ALL means greater than every value.
+- Similar comparisons work with <, =, and other comparison operators, subject to SQL's rules.
+Suppose IT salaries are 80,000, 90,000 and 60,000.
+
+SELECT name, salary
+FROM Employees
+WHERE salary > ANY (
+    SELECT salary
+    FROM Employees
+    WHERE department = 'IT'
+);
+
+This means the salary must be greater than at least one IT salary. A salary above 60,000 qualifies, so Asha, Priya, Meena and Neha qualify.
+
+Now use ALL:
+
+SELECT name, salary
+FROM Employees
+WHERE salary > ALL (
+    SELECT salary
+    FROM Employees
+    WHERE department = 'IT'
+);
+
+This requires a salary greater than every IT salary — in this example, greater than 90,000. No employee qualifies.
+
+These are useful for advanced comparison queries. Remember that NULL values in a subquery can affect the result through UNKNOWN.
+
+8. A practical combined query
+Imagine a company wants to find employees who meet either of these requirements:
+- Work in IT and earn at least 80,000.
+- Work in HR and are younger than 35.
+
+SELECT name, department, salary, age
+FROM Employees
+WHERE (department = 'IT' AND salary >= 80000)
+   OR (department = 'HR' AND age < 35);
+
+Expected result:
+name	department	salary	age
+Asha	IT	         80000	25
+Ravi	HR	         50000	30
+Priya	IT	         90000	28
+Let's break it down:
+1. The first group requires both IT membership and salary of at least 80,000.
+2. The second group requires both HR membership and age below 35.
+3. OR means an employee can qualify through either group.
+This is the type of condition-combination problem you should practise until you can predict the output before executing the query.
+
+9. Can we use logical operators with HAVING?
+Yes. WHERE filters individual rows before grouping, while HAVING filters groups after aggregation.
+
+Suppose you want departments with an average salary above 60,000 and at least two employees.
+
+SELECT department, AVG(salary) AS avg_salary,
+       COUNT(*) AS employee_count
+FROM Employees
+GROUP BY department
+HAVING AVG(salary) > 60000
+   AND COUNT(*) >= 2;
+
+Expected result:
+department	avg_salary	employee_count
+HR	          60000	         2
+IT	          76666.67	     3
+Correction: With the strict condition AVG(salary) > 60000, HR's average is exactly 60,000, so only IT qualifies. The correct result is:
+department	avg_salary	employee_count
+IT	76666.67	3
+This illustrates why reading comparison operators carefully matters in interviews.
+
+
+
