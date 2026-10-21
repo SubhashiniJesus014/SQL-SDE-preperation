@@ -492,5 +492,212 @@ department	avg_salary	employee_count
 IT	76666.67	3
 This illustrates why reading comparison operators carefully matters in interviews.
 
+What is UPDATE in SQL?
+UPDATE is a SQL command used to modify existing values in one or more rows of a table.
+
+Real-world example: Imagine an e-commerce company stores employee salaries. An employee receives a salary hike from ₹50,000 to ₹60,000. Instead of deleting the employee and inserting a new record, we use UPDATE.
+
+UPDATE syntax
+UPDATE table_name
+SET column_name = new_value
+WHERE condition;
+
+Understand each keyword:
+- UPDATE — specifies the table you want to modify.
+- SET — specifies the new value for a column.
+- WHERE — identifies which rows should be updated.
+Important: Always check your WHERE condition before running an update.
+
+Example 1: Update one employee's salary
+Suppose we have this Employees table.
+id	name	department	salary
+1	Ravi	IT	50000
+2	Priya	HR	40000
+3	Rahul	IT	60000
+4	Anu	Sales	35000
+Requirement: Increase Ravi's salary to ₹55,000.
+
+SQL query:
+UPDATE Employees
+SET salary = 55000
+WHERE id = 1;
+
+Result:
+id	name	department	salary
+1	Ravi	IT	55000
+2	Priya	HR	40000
+3	Rahul	IT	60000
+4	Anu	Sales	35000
+Only Ravi's salary changes because WHERE id = 1 selects his row.
+
+Example 2: Update multiple columns
+Suppose Priya moves from HR to Finance and receives a salary increase.
+UPDATE Employees
+SET department = 'Finance',
+    salary = 45000
+WHERE id = 2;
+
+Result for Priya:
+id	name	department	salary
+2	  Priya	 Finance	  45000
+You can update multiple columns in a single UPDATE statement by separating assignments with commas.
+
+Example 3: Update multiple rows using WHERE
+Suppose the company wants to increase every IT employee's salary to ₹70,000.
+
+UPDATE Employees
+SET salary = 70000
+WHERE department = 'IT';
+
+Result:
+id	name	department	salary
+1	Ravi	IT	70000
+3	Rahul	IT	70000
+Both rows are updated because both employees satisfy the condition.
+
+Interview point: WHERE can match one row, multiple rows, or no rows, depending on the condition.
+
+Example 4: UPDATE without WHERE — a common interview trap
+Consider this query:
+UPDATE Employees
+SET salary = 50000;
+What happens?
+
+Every employee's salary becomes ₹50,000.
+id	name	department	salary
+1	Ravi	IT	50000
+2	Priya	HR	50000
+3	Rahul	IT	50000
+4	Anu	Sales	50000
+Why? Because there is no WHERE condition restricting which rows should be updated.
+
+This is one of the most important mistakes to avoid in real projects.
+
+Example 5: UPDATE using a condition
+Suppose the company wants to increase the salary of every employee earning less than ₹40,000 to ₹42,000.
+UPDATE Employees
+SET salary = 42000
+WHERE salary < 40000;
+
+Only employees whose salary is below ₹40,000 are affected.
+
+Notice that UPDATE supports conditions such as:
+
+WHERE salary > 50000;
+WHERE department = 'IT';
+WHERE salary BETWEEN 30000 AND 50000;
+WHERE department = 'IT' AND salary > 50000;
+
+You can combine UPDATE with comparison operators and logical operators such as AND, OR, and NOT.
+
+Example 6: Increase salary by a percentage
+This is a useful practical interview question.
+
+Requirement: Give every IT employee a 10% salary hike.
+UPDATE Employees
+SET salary = salary * 1.10
+WHERE department = 'IT';
+
+If Ravi earns ₹50,000, his new salary becomes ₹55,000.
+
+If Rahul earns ₹60,000, his new salary becomes ₹66,000.
+
+Here, SQL calculates the new value using the existing salary
+
+UPDATE vs DELETE vs INSERT
+Command	Purpose	Example
+INSERT	Add new rows	Add a new employee
+UPDATE	Modify existing rows	Increase salary
+DELETE	Remove existing rows	Remove an employee
+Remember these three commands together because interviewers often ask about their differences.
+
+***DELETE vs DROP vs TRUNCATE in SQL***
+First, understand the main difference
+DELETE
+Removes selected rows or all rows from a table. You can use WHERE to select which rows to remove.
+
+TRUNCATE
+Removes all rows from a table while keeping its structure. You cannot use WHERE.
+
+DROP
+Removes the entire table, including its structure and data.
+
+Suppose an e-commerce company stores employee information.
+CREATE TABLE Employees (
+    id INT PRIMARY KEY,
+    name VARCHAR(50),
+    department VARCHAR(50),
+    salary INT
+);
+
+Insert some sample records:
+INSERT INTO Employees VALUES
+(1, 'Ravi', 'IT', 50000),
+(2, 'Priya', 'HR', 40000),
+(3, 'Rahul', 'IT', 60000),
+(4, 'Anu', 'Sales', 35000);
+
+Our table looks like this:
+id	name	department	salary
+1	  Ravi	     IT	    50000
+2	  Priya	     HR	    40000
+3	  Rahul	   IT	    60000
+4	   Anu	     Sales	35000
+Now let's see what each command does.
+
+DELETE — remove specific rows
+Syntax
+DELETE FROM table_name
+WHERE condition;
+
+Example 1: Delete only HR employees
+DELETE FROM Employees
+WHERE department = 'HR';
+
+Result:
+id	name	department	salary
+1	  Ravi	  IT	      50000
+3	  Rahul	  IT	      60000
+4	   Anu	 Sales	    35000
+Only Priya's row is deleted. The table structure remains unchanged.
+
+Example 2: Delete all rows
+DELETE FROM Employees;
+
+Result: the table contains zero rows, but the table itself still exists.
+
+4. TRUNCATE — remove all rows quickly
+Syntax
+TRUNCATE TABLE table_name;
+
+Suppose Employees contains all four original records.
+
+Execute:
+TRUNCATE TABLE Employees;
+
+Result:
+Table property	After TRUNCATE
+Rows	0
+Table structure	Exists
+Column definitions	Remain
+Primary key definition	Remains
+WHERE condition	Not supported
+Think of a table as a notebook. TRUNCATE clears all the entries but keeps the notebook and its layout.
+
+5. DROP — remove the entire table
+Syntax
+DROP TABLE table_name;
+
+Example:
+DROP TABLE Employees;
+
+After this command, the Employees table no longer exists.
+Table property	           After DROP
+Rows	                     Removed with the table
+Table  structure	          Removed
+Columns	                    Removed
+Indexes defined on the table	Removed
+Can you query the table?	     No
+
 
 
