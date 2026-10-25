@@ -700,4 +700,17 @@ Indexes defined on the table	Removed
 Can you query the table?	     No
 
 
+Main differences
+Feature	                      DELETE	                              TRUNCATE	                          DROP
+Purpose	                     Removes rows	                      Removes all rows	              Removes the entire table
+Type	                         DML	                            Commonly classified as DDL	             DDL
+WHERE condition	              Yes	                                       No	                              No
+Delete specific rows	        Yes	                                       No	                     Removes the table itself
+Table structure	            Preserved	                              Preserved	                         Removed
+Table columns	              Preserved	                              Preserved	                         Removed
+Speed for removing all rows	Can be slower                        	Generally faster	           Removes the table object
+AUTO_INCREMENT reset	        Usually no	                        Often yes	                   Table and its counter are removed
+Rollback	                  Depends on transaction        Depends on database and transaction           Depends on database and transaction
+                            and database    	
 
+Interview tip: Rollback behavior and identity-counter behavior can vary by database, so avoid saying these are identical across every SQL system.
