@@ -1,0 +1,178 @@
+SQL JOIN
+1. What is a JOIN in SQL?
+A JOIN is used to combine data from two or more tables using a related column.
+
+Imagine you're building an e-commerce application like Amazon.
+
+You have two tables:
+Table 1: Customers
+customer_id	name
+1	         Rahul
+2	         Priya
+3	         Arjun
+4	         Sneha
+
+Table 2: Orders
+order_id	customer_id	product
+101	         1	      Laptop
+102	         2	      Mobile
+103	         1	      Keyboard
+104	         5	      Headphones
+
+Notice something important:
+- Rahul has two orders.
+- Priya has one order.
+- Arjun and Sneha have no orders.
+- Order 104 belongs to customer ID 5, which doesn't exist in the Customers table.
+Suppose an interviewer asks:
+
+"Display each customer's name along with the products they ordered."
+
+The customer's name is in one table, and the product is in another. We need to connect them using customer_id.
+
+SELECT c.name, o.product
+FROM Customers c
+JOIN Orders o
+ON c.customer_id = o.customer_id;
+
+Result:
+name	product
+Rahul	Laptop
+Priya	Mobile
+Rahul	Keyboard
+
+Understand the query step by step
+- FROM Customers c — start with the Customers table. c is an alias.
+- JOIN Orders o — combine it with the Orders table. o is an alias.
+- ON c.customer_id = o.customer_id — match rows whose customer IDs are equal.
+- SELECT c.name, o.product — display only the required columns.
+Important: Rahul appears twice because he has two matching orders. SQL JOINs return matching row combinations; they don't automatically remove duplicates.
+
+2. Types of JOINs in SQL
+There are four main JOIN types you should understand first:
+1. INNER JOIN
+Returns only rows that match in both tables.
+Interview use case: Find customers who have placed orders.
+2. LEFT JOIN
+Returns every row from the left table and matching rows from the right table. Missing matches become NULL.
+Interview use case: Find all customers, including those who haven't ordered.
+3. RIGHT JOIN
+Returns every row from the right table and matching rows from the left table.
+Interview use case: Find every order, even if its customer record is missing.
+4. FULL OUTER JOIN
+Returns all rows from both tables, matching them where possible and filling missing values with NULL.
+Interview use case: Compare two datasets and identify matched and unmatched records.
+Let's understand each using the same tables.
+
+3. INNER JOIN — only matching rows
+SELECT c.customer_id, c.name, o.product
+FROM Customers c
+INNER JOIN Orders o
+ON c.customer_id = o.customer_id;
+
+Result:
+customer_id	name	product
+1	          Rahul	Laptop
+2	          Priya	Mobile
+1	          Rahul	Keyboard
+
+Why didn't Arjun and Sneha appear? Because they have no matching rows in Orders.
+
+Why didn't Headphones appear? Because customer ID 5 has no matching customer.
+
+Remember: JOIN by itself means INNER JOIN in SQL.
+Product-company interview example
+Question: Find employees who are assigned to a department.
+
+SELECT e.name, d.department_name
+FROM Employees e
+INNER JOIN Departments d
+ON e.department_id = d.department_id;
+
+This returns only employees whose department matches a row in Departments.
+
+4. LEFT JOIN — keep everything from the left table
+Now the interviewer asks:
+"Display all customers and their orders, including customers who have never placed an order."
+INNER JOIN cannot answer this because it removes customers without orders.
+Use LEFT JOIN:
+SELECT c.customer_id, c.name, o.product
+FROM Customers c
+LEFT JOIN Orders o
+ON c.customer_id = o.customer_id;
+
+Result:
+customer_id	name	product
+1	         Rahul	Laptop
+1	         Rahul	Keyboard
+2	         Priya	Mobile
+3	         Arjun	NULL
+4	         Sneha	NULL
+
+Understand this carefully:
+- Rahul appears twice because he has two orders.
+- Priya appears once.
+- Arjun and Sneha still appear, even without orders.
+- NULL means there is no matching order.
+A very important interview pattern
+Question: Find customers who have never placed an order.
+
+SELECT c.customer_id, c.name
+FROM Customers c
+LEFT JOIN Orders o
+ON c.customer_id = o.customer_id
+WHERE o.order_id IS NULL;
+
+Result:
+customer_id	name
+3	          Arjun
+4	          Sneha
+
+Why does this work?
+1. LEFT JOIN preserves every customer.
+2. Customers with orders get a non-NULL order_id.
+3. Customers without orders get NULL.
+4. WHERE o.order_id IS NULL keeps only customers without matching orders.
+Interview shortcut: When you see "find users who have never...", "customers without...", or "employees not assigned...", consider LEFT JOIN followed by WHERE right_table.id IS NULL.
+
+5. RIGHT JOIN — keep everything from the right table
+Let's reverse the table order:
+SELECT c.name, o.order_id, o.product
+FROM Customers c
+RIGHT JOIN Orders o
+ON c.customer_id = o.customer_id;
+
+Result:
+name	order_id	product
+Rahul	101	Laptop
+Priya	102	Mobile
+Rahul	103	Keyboard
+NULL	104	Headphones
+
+Why is the last row included? Because RIGHT JOIN preserves every row in Orders, even when no matching customer exists.
+
+A simple rule:
+- LEFT JOIN: preserve the left table.
+- RIGHT JOIN: preserve the right table.
+You can often rewrite a RIGHT JOIN as a LEFT JOIN by swapping the table order. In interviews, LEFT JOIN is usually easier to reason about.
+
+6. FULL OUTER JOIN — keep everything from both tables
+SELECT c.customer_id, c.name, o.order_id, o.product
+FROM Customers c
+FULL OUTER JOIN Orders o
+ON c.customer_id = o.customer_id;
+
+Conceptually, the result includes:
+customer_id	name	order_id	product
+1	          Rahul	101	Laptop
+1	          Rahul	103	Keyboard
+2	          Priya	102	Mobile
+3	          Arjun	NULL	NULL
+4	          Sneha	NULL	NULL
+NULL	       NULL	104	Headphones
+
+FULL OUTER JOIN keeps matched rows, customers without orders, and orders without customers.
+
+MySQL note: MySQL does not directly support FULL OUTER JOIN. You can simulate it using a LEFT JOIN, a RIGHT JOIN, and UNION or a carefully constructed UNION ALL query.
+
+
